@@ -1,0 +1,29 @@
+provider:
+  host: https://localhost:9443 #Change the host
+
+client:
+  client-id: QKbeTUO2Iti8PH4ixufbM97__6Ea #Change client-id
+  client-secret: 2PllkJkr7k_t4nb5gwSQah5eQJjwkoO5qr9IVghfea4a # Change client-secret
+  post-logout-uri: http://localhost:8080/NMLS/login
+  scope: openid,internal_login
+  authorization-grant-type: authorization_code
+
+
+#No need to change the following configurations
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          wso2:
+            client-name : WSO2 Identity Server
+            client-id: ${client.client-id} #Change client-id
+            client-secret: ${client.client-secret} # Change client-secret
+            authorization-grant-type: ${client.authorization-grant-type}
+            scope: ${client.scope}
+        provider:
+          wso2:
+            issuer-uri: ${provider.host}/oauth2/token
+
+  thymeleaf:
+    cache: false
