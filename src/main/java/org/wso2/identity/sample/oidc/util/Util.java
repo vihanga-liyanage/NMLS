@@ -1,8 +1,10 @@
 package org.wso2.identity.sample.oidc.util;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwt;
+import io.jsonwebtoken.impl.DefaultJwtParser;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.springframework.ui.Model;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
@@ -46,12 +48,12 @@ public class Util {
         return stringBuilder.toString();
     }
 
-    public static Map<String, String> getOrganizationsListForUser(String userName, Model model) throws IOException {
+    public static Map<String, String> getOrganizationsListForUser(String userName, String accessToken) throws IOException {
         String idpUrl = "https://localhost:9443";
         String scimEp = idpUrl + "/api/users/v1/me/organizations";
         HttpsURLConnection urlConnection = (HttpsURLConnection) new URL(scimEp).openConnection();
         urlConnection.setRequestMethod("GET");
-        urlConnection.setRequestProperty("Authorization", getBearerHeader(model.getAttribute("accessToken").toString()));
+        urlConnection.setRequestProperty("Authorization", getBearerHeader(accessToken));
         urlConnection.setRequestProperty("Content-Type", "application/json");
         urlConnection.setDoOutput(true);
         String res = readFromResponse(urlConnection);
@@ -104,4 +106,12 @@ public class Util {
         }
     }
 
+    public static Claims decodeTokenClaims(String token) {
+        String[] splitToken = token.split("\\.");
+        String unsignedToken = splitToken[0] + "." + splitToken[1] + ".";
+        DefaultJwtParser parser = new DefaultJwtParser();
+        Jwt<?, ?> jwt = parser.parse(unsignedToken);
+        Claims claims = (Claims) jwt.getBody();
+        return claims;
+    }
 }

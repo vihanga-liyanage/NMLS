@@ -62,18 +62,19 @@ code {
 }
 
 .container {
-    background: #fff;
-    width: 789px;
-    margin: 0 auto;
-    margin-top: 50px;
     border-radius: 3px;
 }
 
 .details {
-    text-align: left;
-    display: inline-block;
-    margin-left: -30px;
-    width: 80%;
+  text-align: left;
+  display: inline-block;
+  margin-left: -30px;
+  width: 80%;
+  list-style: none; /* Remove default bullet points */
+  padding: 0; /* Remove default padding */
+  margin: 0; /* Remove default margin */
+  max-width: 100%; /* Allow horizontal growth up to 100% */
+  overflow-wrap: break-word; /* Allow text wrapping */
 }
 
 .header-title {
@@ -83,7 +84,7 @@ code {
 }
 
 .content {
-    padding: 50px;
+    padding: 10px;
 }
 
 .btn.primary,

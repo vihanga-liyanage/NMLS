@@ -19,9 +19,10 @@
 
 package org.wso2.identity.sample.oidc.controller;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwt;
 import io.jsonwebtoken.impl.DefaultJwtParser;
-import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
@@ -33,29 +34,16 @@ import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.wso2.identity.sample.oidc.util.Util;
 
-import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.http.HttpSession;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
-
-import org.json.JSONObject;
-
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.HashMap;
-import java.util.List;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import org.wso2.identity.sample.oidc.util.Util;
 
 /**
  * Handles the redirection after successful authentication from Identity Server
@@ -100,36 +88,57 @@ public class IndexController {
             userName = user.getName();
         }
         model.addAttribute("userName", userName);
-        getTokenDetails(model, authentication);
-        Map<String, String> orgs = Util.getOrganizationsListForUser(userName, model);
-        if (orgs.size() == 1) {
-            String organization = orgs.keySet().toArray()[0].toString();
+        OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
+        String clientRegistrationId = oauthToken.getAuthorizedClientRegistrationId();
+        OAuth2AuthorizedClient client =
+                authorizedClientService.loadAuthorizedClient(clientRegistrationId, oauthToken.getName());
+        String accessToken = client.getAccessToken().getTokenValue();
+        Map<String, String> orgs = Util.getOrganizationsListForUser(userName, accessToken);
+        if (orgs == null || orgs.size() == 0) {
+            model.addAttribute("message", "No organizations found for the user");
+            return "error";
+        } else {
+            String organization = null;
+            if (orgs.size() > 1) {
+                if (session.getAttribute("currentOrg") != null && orgs.containsKey(session.getAttribute("currentOrg"))) {
+                    organization = session.getAttribute("currentOrg").toString();
+                }else {
+                    organization = orgs.keySet().toArray()[0].toString();
+                }
+            } else {
+                organization = orgs.keySet().toArray()[0].toString();
+            }
             model.addAttribute("organizations", orgs);
             model.addAttribute("currentOrg", organization);
-            OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
-            String clientRegistrationId = oauthToken.getAuthorizedClientRegistrationId();
-            OAuth2AuthorizedClient client =
-                    authorizedClientService.loadAuthorizedClient(clientRegistrationId, oauthToken.getName());
+
             if (client != null && client.getAccessToken() != null) {
-                String accessToken = client.getAccessToken().getTokenValue();
-                // Extract ID token from access token (if applicable
+
                 Set<String> scopesList = client.getAccessToken().getScopes();
                 String scopes = String.join(" ", scopesList);
-                JSONObject orgToken = Util.switchToken(accessToken, scopes, organization,clientId, clientSecret);
-
+                JSONObject orgToken = Util.switchToken(accessToken, scopes, organization, clientId, clientSecret);
+                String idTokenString = orgToken.getString("id_token");
+                Claims claims = Util.decodeTokenClaims(idTokenString);
+                String orgaccessToken = orgToken.getString("access_token");
+                Set<String> scope =  new HashSet<>(Arrays.asList(orgToken.getString("scope").split(" ")));
+                String tokenType = orgToken.getString("token_type");
+                String refreshToken = orgToken.getString("refresh_token");
+                String accessTokenExp = claims.getExpiration().toString();
+                model.addAttribute("accessToken", orgaccessToken);
+                model.addAttribute("tokenType", tokenType);
+                model.addAttribute("accessTokenExp", accessTokenExp);
+                model.addAttribute("scope", scope);
+                model.addAttribute("idtoken", claims);
+                model.addAttribute("refreshToken", refreshToken);
                 session.setAttribute("currentOrg", organization);
                 session.setAttribute("orgToken", orgToken);
             }
-            return "redirect:/home";
-        } else if (orgs.size() > 1) {
-            model.addAttribute("organizations", orgs);
-            model.addAttribute("currentOrg", session.getAttribute("currentOrg"));
-            return "index";
-        } else {
-            model.addAttribute("message", "No organizations found for the user");
-            return "error";
+            if (orgs.size() == 1) {
+                return "redirect:/home";
+            } else if (orgs.size() > 1) {
+                return "index";
+            }
         }
-
+        return "error";
     }
 
 
@@ -146,7 +155,7 @@ public class IndexController {
 
         JSONObject orgToken = (JSONObject) session.getAttribute("orgToken");
         String idTokenString = orgToken.getString("id_token");
-        Claims claims = decodeTokenClaims(idTokenString);
+        Claims claims = Util.decodeTokenClaims(idTokenString);
 
         model.addAttribute("userName", claims.getSubject());
         model.addAttribute("idtoken", claims);
@@ -155,43 +164,4 @@ public class IndexController {
         return "userinfo";
     }
 
-    public Claims decodeTokenClaims(String token) {
-        String[] splitToken = token.split("\\.");
-        String unsignedToken = splitToken[0] + "." + splitToken[1] + ".";
-        DefaultJwtParser parser = new DefaultJwtParser();
-        Jwt<?, ?> jwt = parser.parse(unsignedToken);
-        Claims claims = (Claims) jwt.getBody();
-        return claims;
-    }
-
-    private void getTokenDetails(Model model, Authentication authentication) {
-
-        OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
-        String clientRegistrationId = oauthToken.getAuthorizedClientRegistrationId();
-        OAuth2AuthorizedClient client =
-                authorizedClientService.loadAuthorizedClient(clientRegistrationId, oauthToken.getName());
-
-        if (client != null && client.getAccessToken() != null) {
-            String accessToken = client.getAccessToken().getTokenValue();
-            Set<String> scope = client.getAccessToken().getScopes();
-            String tokenType = client.getAccessToken().getTokenType().getValue();
-            String accessTokenExp = client.getAccessToken().getExpiresAt().toString();
-            LOGGER.log(Level.INFO, "Access token : " + accessToken);
-            LOGGER.log(Level.INFO, "Token type : " + tokenType);
-            LOGGER.log(Level.INFO, "Scope : " + scope);
-            LOGGER.log(Level.INFO, "Access token Exp : " + accessTokenExp);
-            model.addAttribute("accessToken", accessToken);
-            model.addAttribute("tokenType", tokenType);
-            model.addAttribute("accessTokenExp", accessTokenExp);
-            model.addAttribute("scope", scope);
-
-        }
-
-        if (client != null && client.getRefreshToken() != null) {
-            String refreshToken = client.getRefreshToken().getTokenValue();
-            LOGGER.log(Level.INFO, "Refresh token: " + refreshToken);
-            model.addAttribute("refreshToken", refreshToken);
-
-        }
-    }
 }

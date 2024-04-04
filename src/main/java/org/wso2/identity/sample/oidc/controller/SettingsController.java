@@ -38,13 +38,18 @@ public class SettingsController {
     @GetMapping("/settings")
     public String homeContext(Model model, Authentication authentication) throws IOException {
 
+        OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
+        String clientRegistrationId = oauthToken.getAuthorizedClientRegistrationId();
+        OAuth2AuthorizedClient client =
+                authorizedClientService.loadAuthorizedClient(clientRegistrationId, oauthToken.getName());
+        String accessToken = client.getAccessToken().getTokenValue();
         user = (DefaultOidcUser) authentication.getPrincipal();
         if (user != null) {
             userName = user.getName();
         }
         model.addAttribute("userName", userName);
         getTokenDetails(model, authentication);
-        Map<String,String> orgs= Util.getOrganizationsListForUser(userName,model);
+        Map<String,String> orgs= Util.getOrganizationsListForUser(userName,accessToken);
         model.addAttribute("organizations",orgs);
         model.addAttribute("currentOrg",session.getAttribute("currentOrg"));
         if(userName.equals("steve@carbon.super")){//implement logic
