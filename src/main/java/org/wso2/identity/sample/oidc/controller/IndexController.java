@@ -23,6 +23,8 @@ import io.jsonwebtoken.Jwt;
 import io.jsonwebtoken.impl.DefaultJwtParser;
 import org.json.JSONArray;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
@@ -53,6 +55,7 @@ import java.util.logging.Logger;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import org.wso2.identity.sample.oidc.util.Util;
 
 /**
  * Handles the redirection after successful authentication from Identity Server
@@ -72,7 +75,15 @@ public class IndexController {
     }
 
     @Autowired
+    private Environment env;
+
+    @Autowired
     private HttpSession session;
+    @Value("${client.client-id}")
+    private String clientId;
+
+    @Value("${client.client-secret}")
+    private String clientSecret;
 
     /**
      * Redirects to this method once the user successfully authenticated and this method will redirect to index page.
@@ -82,7 +93,7 @@ public class IndexController {
      * @return Index page.
      */
     @GetMapping("/")
-    public String currentUserName(Model model, Authentication authentication) throws IOException {
+    public String checkCurrentUser(Model model, Authentication authentication) throws IOException {
 
         user = (DefaultOidcUser) authentication.getPrincipal();
         if (user != null) {
@@ -90,52 +101,37 @@ public class IndexController {
         }
         model.addAttribute("userName", userName);
         getTokenDetails(model, authentication);
-        Map<String, String> orgs = getOrganizationsListForUser(userName, model);
-        model.addAttribute("organizations", orgs);
-        model.addAttribute("currentOrg", session.getAttribute("currentOrg"));
-        return "index";
-    }
+        Map<String, String> orgs = Util.getOrganizationsListForUser(userName, model);
+        if (orgs.size() == 1) {
+            String organization = orgs.keySet().toArray()[0].toString();
+            model.addAttribute("organizations", orgs);
+            model.addAttribute("currentOrg", organization);
+            OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
+            String clientRegistrationId = oauthToken.getAuthorizedClientRegistrationId();
+            OAuth2AuthorizedClient client =
+                    authorizedClientService.loadAuthorizedClient(clientRegistrationId, oauthToken.getName());
+            if (client != null && client.getAccessToken() != null) {
+                String accessToken = client.getAccessToken().getTokenValue();
+                // Extract ID token from access token (if applicable
+                Set<String> scopesList = client.getAccessToken().getScopes();
+                String scopes = String.join(" ", scopesList);
+                JSONObject orgToken = Util.switchToken(accessToken, scopes, organization,clientId, clientSecret);
 
-    private Map<String, String> getOrganizationsListForUser(String userName, Model model) throws IOException {
-        String idpUrl = "https://localhost:9443";
-        String scimEp = idpUrl + "/api/users/v1/me/organizations";
-        HttpsURLConnection urlConnection = (HttpsURLConnection) new URL(scimEp).openConnection();
-        urlConnection.setRequestMethod("GET");
-        urlConnection.setRequestProperty("Authorization", getBearerHeader(model.getAttribute("accessToken").toString()));
-        urlConnection.setRequestProperty("Content-Type", "application/json");
-        urlConnection.setDoOutput(true);
-        String res = readFromResponse(urlConnection);
-        JSONObject jsonResp = new JSONObject(res);
-        Map<String, String> orgsList = new HashMap<>();
-        if (jsonResp.has("organizations") && jsonResp.getJSONArray("organizations").length() > 0) {
-            JSONArray orgsJson = jsonResp.getJSONArray("organizations");
-            for (int i = 0; i < orgsJson.length(); i++) {
-                JSONObject org = orgsJson.getJSONObject(i);
-                if (org.getString("status").equals("ACTIVE")) {
-                    orgsList.put(org.getString("id"), org.getString("name"));
-                }
+                session.setAttribute("currentOrg", organization);
+                session.setAttribute("orgToken", orgToken);
             }
-        }
-        return orgsList;
-    }
-
-    private String getBearerHeader(String accessToken) {
-        return "Bearer " + accessToken;
-    }
-
-    private String readFromResponse(final URLConnection urlConnection) throws IOException {
-
-        final BufferedReader BufferedReader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
-
-        final StringBuilder stringBuilder = new StringBuilder();
-
-        String line;
-        while ((line = BufferedReader.readLine()) != null) {
-            stringBuilder.append(line);
+            return "redirect:/home";
+        } else if (orgs.size() > 1) {
+            model.addAttribute("organizations", orgs);
+            model.addAttribute("currentOrg", session.getAttribute("currentOrg"));
+            return "index";
+        } else {
+            model.addAttribute("message", "No organizations found for the user");
+            return "error";
         }
 
-        return stringBuilder.toString();
     }
+
 
     /**
      * Handles the redirection to /userinfo endpoint and get the user information from authentication object. This
@@ -148,23 +144,14 @@ public class IndexController {
     @GetMapping("/userinfo")
     public String getUser(Authentication authentication, Model model) {
 
-        //if httpsession has the current organization which is NMLS org or null, then add them to the model or open a new block and extract data from token json object from httpsession
-        if (session.getAttribute("currentOrg") == null || session.getAttribute("currentOrg").equals("nmls")) {
-            model.addAttribute("userName", userName);
-            model.addAttribute("idtoken", user.getClaims());
-            LOGGER.log(Level.INFO, "UserName : " + userName);
-            LOGGER.log(Level.INFO, "User Attributes: " + user.getClaims());
-        } else {
-            //extract the token json object from httpsession and add them to the model
-            JSONObject orgToken = (JSONObject) session.getAttribute("orgToken");
-            String idTokenString = orgToken.getString("id_token");
-            Claims claims = decodeTokenClaims(idTokenString);
+        JSONObject orgToken = (JSONObject) session.getAttribute("orgToken");
+        String idTokenString = orgToken.getString("id_token");
+        Claims claims = decodeTokenClaims(idTokenString);
 
-            model.addAttribute("userName", claims.getSubject());
-            model.addAttribute("idtoken", claims);
-            LOGGER.log(Level.INFO, "UserName : " + claims.getSubject());
-            LOGGER.log(Level.INFO, "User Attributes: " + claims);
-        }
+        model.addAttribute("userName", claims.getSubject());
+        model.addAttribute("idtoken", claims);
+        LOGGER.log(Level.INFO, "UserName : " + claims.getSubject());
+        LOGGER.log(Level.INFO, "User Attributes: " + claims);
         return "userinfo";
     }
 

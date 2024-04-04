@@ -5,7 +5,7 @@ client:
   client-id: QKbeTUO2Iti8PH4ixufbM97__6Ea #Change client-id
   client-secret: 2PllkJkr7k_t4nb5gwSQah5eQJjwkoO5qr9IVghfea4a # Change client-secret
   post-logout-uri: http://localhost:8080/NMLS/login
-  scope: openid,internal_login
+  scope: openid,internal_login,internal_user_mgt_view,internal_user_mgt_list
   authorization-grant-type: authorization_code
 
 

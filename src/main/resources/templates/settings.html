@@ -24,7 +24,7 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
     <meta name="referrer" content="no-referrer"/>
-    <title>Select Organization</title>
+    <title>Settings</title>
     <link href="css/app.css" rel="stylesheet" type="text/css"/>
 </head>
 
@@ -34,6 +34,14 @@
     <div class="banner">
         <div class="banner-left">
             <img src="images/nmls-logo.png" alt="Banner Image">
+            <div class="dropdown">
+                <form th:action="@{/orgswitch}" method="get">
+                    <select id="organizationSelect" name="organization" >
+                        <option th:each="org : ${organizations}" th:value="${org.key}" th:text="${org.value}" th:selected="${currentOrg == org.key}">
+                        </option>
+                    </select>
+                </form>
+            </div>
         </div>
         <div class="banner-right">
             <span class="username" th:text="${userName}"></span>
@@ -42,38 +50,38 @@
             </form>
         </div>
     </div>
-    <div class="content">
-        <img src="images/nmls-logo.png" class="home-image"/>
-    </div>
-    <form th:action="@{/orgswitch}" method="get">
-        <select id="organizationSelectMain" name="organization" >
-            <option th:each="org : ${organizations}" th:value="${org.key}" th:text="${org.value}" th:selected="${currentOrg == org.key}">
-            </option>
-        </select>
-    </form>
-
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const organizationSelect = document.getElementById('organizationSelectMain');
+        const organizationSelect = document.getElementById('organizationSelect');
             organizationSelect.addEventListener('change', function() {
                 console.log("Dropdown selection changed!");
-                this.closest('form').submit();
+                this.closest('form').submit(); // Submit the closest form on change
             }
         );
     });
     </script>
 
-</div>
+    <div class="container">
+        <div class="pane pane-left">
+            <a href="/admin-services" class="underline">Go to Admin Services</a>
+        </div>
+        <div class="pane pane-right">
+            <form action="/submit-email" method="post"> <input type="email" name="email" placeholder="Enter your email address" required>
+                <button type="submit">Notify</button>
+            </form>
+        </div>
+    </div>
 <img src="images/footer.png" class="footer-image"/>
 
 <div class="logged-in-view">
     <div class="container">
         <div class="content">
-            <h3>Token Details</h3>
+            <h3>Below are the basic token details retrieve from the server on a successful login.</h3>
             <div>
                 <ul class="details">
                     <li><span>Access Token:</span> <span style="font-weight:bold" th:text="${accessToken}"></span></li>
-                    <li><span>Access Token Expiry Time:</span> <span style="font-weight:bold" th:text="${accessTokenExp}"></span></li>
+                    <li><span>Access Token Expiry Time:</span> <span style="font-weight:bold"
+                                                                     th:text="${accessTokenExp}"></span></li>
                     <li><span>Scope:</span> <span style="font-weight:bold" th:text="${scope}"></span></li>
                     <li><span>Token Type:</span> <span style="font-weight:bold" th:text="${tokenType}"></span></li>
                     <li><span>Refresh Token:</span> <span style="font-weight:bold" th:text="${refreshToken}"></span>

@@ -65,7 +65,7 @@ public class OrgController {
     @GetMapping("/orgswitch")
     public String handleOrgSwitch(Authentication authentication, Model model,@RequestParam("organization") String selectedOrg) throws IOException {
 
-        if(selectedOrg!=null && !selectedOrg.isEmpty() && !selectedOrg.equals("nmls")) {
+        if(selectedOrg!=null && !selectedOrg.isEmpty()) {
             OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
             String clientRegistrationId = oauthToken.getAuthorizedClientRegistrationId();
             OAuth2AuthorizedClient client =
@@ -76,7 +76,7 @@ public class OrgController {
                 // Extract ID token from access token (if applicable
                 Set<String> scopesList = client.getAccessToken().getScopes();
                 String scopes = String.join(" ", scopesList);
-                JSONObject orgToken = switchToken(accessToken, scopes, selectedOrg);
+                JSONObject orgToken = Util.switchToken(accessToken, scopes, selectedOrg, clientId, clientSecret);
 
                 session.setAttribute("currentOrg", selectedOrg);
                 session.setAttribute("orgToken", orgToken);
@@ -88,36 +88,5 @@ public class OrgController {
     }
 
 
-    public JSONObject switchToken(String ticket,String scopes,String selectedOrg) throws IOException {
 
-        HttpsURLConnection urlConnection1 = (HttpsURLConnection) new URL("https://localhost:9443/oauth2/token").openConnection();
-        urlConnection1.setRequestMethod("POST");
-
-        String encodedCredentials = new String(Base64.getEncoder().encode(String.join(":", clientId, clientSecret)
-                .getBytes()));
-
-        urlConnection1.setRequestProperty("Authorization", "Basic " + encodedCredentials);
-        urlConnection1.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-
-        urlConnection1.setDoOutput(true);
-        DataOutputStream dataOutputStream = new DataOutputStream(urlConnection1.getOutputStream());
-
-        String payload = "grant_type=organization_switch" +
-                "&token=" + ticket +
-                "&scope=" + scopes+
-                "&switching_organization=" + selectedOrg;
-        dataOutputStream.writeBytes(payload);
-
-        String jsonresp;
-        if (urlConnection1.getResponseCode() >= 400) {
-            jsonresp = Util.readFromError(urlConnection1);
-            LOGGER.severe("request error response: " + jsonresp);
-            return null;
-        } else {
-            jsonresp = Util.readFromResponse(urlConnection1);
-            JSONObject json = new JSONObject(jsonresp);
-            LOGGER.info("response: " + jsonresp);
-            return json;
-        }
-    }
 }

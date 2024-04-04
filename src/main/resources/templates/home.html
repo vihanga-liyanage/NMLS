@@ -37,7 +37,6 @@
             <div class="dropdown">
                 <form th:action="@{/orgswitch}" method="get">
                     <select id="organizationSelect" name="organization" >
-                        <option value="nmls" th:selected="${currentOrg == 'nmls'}">NMLS</option>
                         <option th:each="org : ${organizations}" th:value="${org.key}" th:text="${org.value}" th:selected="${currentOrg == org.key}">
                         </option>
                     </select>
@@ -71,6 +70,9 @@
         <p>
             <a href="oauth2/auhthorization/passwordresert" ><img  src="images/getting-started-button-mlo.jpg"/></a>
         </p>
+    </div>
+    <div>
+        <a th:if="${isAdmin}" href="#" class="settings-btn" th:href="@{/settings}">Settings</a>
     </div>
 <img src="images/footer.png" class="footer-image"/>
 

@@ -66,4 +66,10 @@ public class LoginController {
 
         return "login";
     }
+
+    @GetMapping("/reset-password")
+    public String showResetPassword(Model model) {
+
+        return "password-reset";
+    }
 }
