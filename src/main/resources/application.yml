@@ -2,10 +2,10 @@ provider:
   host: https://localhost:9443 #Change the host
 
 client:
-  client-id: QKbeTUO2Iti8PH4ixufbM97__6Ea #Change client-id
-  client-secret: 2PllkJkr7k_t4nb5gwSQah5eQJjwkoO5qr9IVghfea4a # Change client-secret
+  client-id: oQhUu3oqr_vCb_rsLB4ei0EbkBMa #Change client-id
+  client-secret: jJVhIaRf9i8ogj_EEJfr5dh_EaZcHpX0gDNfffrNCtca # Change client-secret
   post-logout-uri: http://localhost:8080/NMLS/login
-  scope: openid,internal_login,internal_user_mgt_view,internal_user_mgt_list,notification_info
+  scope: openid,internal_login,internal_user_mgt_view,internal_user_mgt_list,notification_info,profile,email
   authorization-grant-type: authorization_code
 
 
