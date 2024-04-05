@@ -105,6 +105,39 @@ public class Util {
         }
     }
 
+    public String getClientCredentialsToken(String idpHost,String clientID,String clientSecret) throws IOException {
+
+//        HttpsURLConnection urlConnection1 = (HttpsURLConnection) new URL(idpHost+"/oauth2/token").openConnection();
+//        urlConnection1.setRequestMethod("POST");
+//
+//        String encodedCredentials = new String(Base64.getEncoder().encode(String.join(":", "M7VmzIgfqb_C5l3Z5t6h4Weey_ga", "mQQV5ZkLtHkGapeDhVjYVhaVM5ga")
+//                .getBytes()));
+//
+//        urlConnection1.setRequestProperty("Authorization", "Basic " + encodedCredentials);
+//        urlConnection1.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+//
+//        urlConnection1.setDoOutput(true);
+//        DataOutputStream dataOutputStream = new DataOutputStream(urlConnection1.getOutputStream());
+//
+//        String payload = "grant_type=urn:ietf:params:oauth:grant-type:uma-ticket" +
+//                "&ticket=" + ticket +
+//                "&claim_token=" + idToken;
+//        dataOutputStream.writeBytes(payload);
+//
+//        String jsonresp;
+//        if (urlConnection1.getResponseCode() >= 400) {
+//            jsonresp = readFromError(urlConnection1);
+//            LOGGER.severe("RPT request error response: " + jsonresp);
+//            return null;
+//        } else {
+//            jsonresp = readFromResponse(urlConnection1);
+//            JSONObject json = new JSONObject(jsonresp);
+//            LOGGER.info("RPT response: " + jsonresp);
+//            return json.getString("access_token");
+//        }
+        return "";
+    }
+
     public static Claims decodeTokenClaims(String token) {
         String[] splitToken = token.split("\\.");
         String unsignedToken = splitToken[0] + "." + splitToken[1] + ".";

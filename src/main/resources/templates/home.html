@@ -36,8 +36,9 @@
             <img src="images/nmls-logo.png" alt="Banner Image">
             <div class="dropdown">
                 <form th:action="@{/orgswitch}" method="get">
-                    <select id="organizationSelect" name="organization" >
-                        <option th:each="org : ${organizations}" th:value="${org.key}" th:text="${org.value}" th:selected="${currentOrg == org.key}">
+                    <select id="organizationSelect" name="organization">
+                        <option th:each="org : ${organizations}" th:value="${org.key}" th:text="${org.value}"
+                                th:selected="${currentOrg == org.key}">
                         </option>
                     </select>
                 </form>
@@ -59,20 +60,19 @@
             }
         );
     });
+
     </script>
 
-    <div class="content">
+    <div class="content-resources">
         <h3>Welcome to the NMLS Resource Center </h3>
-        <p>The NMLS Resource Center is the official gateway into the Nationwide Multistate Licensing System & Registry (NMLS) and provides users with tools, tips, news and updates.</p>
-        <p>
-            <a href="oauth2/auhthorization/passwordresert" ><img src="images/getting-started-button-co.jpg"/></a>
-        </p>
-        <p>
-            <a href="oauth2/auhthorization/passwordresert" ><img  src="images/getting-started-button-mlo.jpg"/></a>
-        </p>
+        <p>The NMLS Resource Center is the official gateway into the Nationwide Multistate Licensing System & Registry
+            (NMLS) and provides users with tools, tips, news and updates.</p>
+        <a href="oauth2/auhthorization/passwordresert"><img src="images/getting-started-button-co.jpg"/></a>
+        <a href="oauth2/auhthorization/passwordresert"><img src="images/getting-started-button-mlo.jpg"/></a>
     </div>
-    <div>
-        <a th:if="${isAdmin}" href="#" class="settings-btn" th:href="@{/settings}">Settings</a>
+    <div class="settings" th:if="${isAdmin}">
+        <img src="images/settings.png" class="settings-image"/>
+        <a  href="#" class="settings-btn" th:href="@{/settings}">Settings</a>
     </div>
 </div>
 <img src="images/footer.png" class="footer-image"/>

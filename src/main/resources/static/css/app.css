@@ -225,23 +225,12 @@ banner-image {
   margin-left: 10px;
 }
 
-.pane {
-  flex: 1; /* Make panes take up some space */
-  text-align: center; /* Center content within panes */
-}
-
-.pane-left a {
-  text-decoration: underline; /* Underline the link */
-}
-
-.pane-right form {
-  display: inline-flex; /* Display form elements inline */
-}
 
 input[type="email"] {
   padding: 5px 10px;
   border: 1px solid #ccc;
   margin-right: 5px;
+   width: 250px;
 }
 
 button[type="submit"] {
@@ -250,6 +239,7 @@ button[type="submit"] {
   color: #fff;
   border: none;
   cursor: pointer;
+
 }
 
 #organizationSelectMain{
@@ -264,4 +254,53 @@ button[type="submit"] {
     color: red;
     font-size: 14px;
     margin-top: 10px;
+}
+
+.content-resources{
+ padding:10px;
+ background-color: #fff;
+ border-radius: 5px;
+ margin-top: 10px;
+ margin-bottom: 10px;
+}
+
+.settings{
+        margin-top: 20px;
+        flex:2;
+}
+
+.settings-image{
+    width: 10px;
+}
+
+.settings-btn{
+    text-align: center;
+}
+
+.content-adminservices {
+  padding: 10px; /* Add some space inside the border */
+  display: flex; /* Make the content a flexbox for alignment */
+  align-items: center; /* Align items in the flexbox vertically */
+  margin-top: 10px;
+  margin-bottom: 10px;
+  height: 150px;
+}
+
+.content-adminservices a {
+    margin-right: 10px;
+    border: 1px solid #000;
+    padding: 10px;
+    width: 250px;
+}
+
+.content-adminservices form {
+    display: inline-block; /* Make the form inline to fit next to the link */
+    border: 1px solid #000;
+    padding: 10px;
+    flex: 1;
+}
+
+.content-adminservices button {
+  display: block; /* Make the button appear on a new line below the form */
+  margin-top: 5px; /* Add some space above the button */
 }

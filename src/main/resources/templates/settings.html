@@ -36,8 +36,9 @@
             <img src="images/nmls-logo.png" alt="Banner Image">
             <div class="dropdown">
                 <form th:action="@{/orgswitch}" method="get">
-                    <select id="organizationSelect" name="organization" >
-                        <option th:each="org : ${organizations}" th:value="${org.key}" th:text="${org.value}" th:selected="${currentOrg == org.key}">
+                    <select id="organizationSelect" name="organization">
+                        <option th:each="org : ${organizations}" th:value="${org.key}" th:text="${org.value}"
+                                th:selected="${currentOrg == org.key}">
                         </option>
                     </select>
                 </form>
@@ -59,17 +60,18 @@
             }
         );
     });
+
     </script>
 
-    <div class="container">
-        <div class="pane pane-left">
-            <a href="/admin-services" class="underline">Go to Admin Services</a>
-        </div>
-        <div class="pane pane-right">
-            <form action="/submit-email" method="post"> <input type="email" name="email" placeholder="Enter your email address" required>
-                <button type="submit">Notify</button>
-            </form>
-        </div>
+    <div class="content-adminservices">
+        <span th:if="${emailSent}"> Email sent successfully! </span>
+        <a href="/admin-services" class="underline">Go to Admin Services</a>
+
+        <form action="/notify" method="post">
+            <input type="email" name="email" th:placeholder="'Enter your email address'" required>
+            <button type="submit">Notify</button>
+        </form>
+
     </div>
 </div>
 <img src="images/footer.png" class="footer-image"/>
