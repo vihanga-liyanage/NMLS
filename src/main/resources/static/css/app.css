@@ -103,6 +103,7 @@ code {
     -webkit-text-size-adjust: none;
     padding: .78571429em 1.5em .78571429em;
     outline: none;
+
 }
 
 .logged-out-view {
@@ -256,7 +257,9 @@ button[type="submit"] {
     text-align: center;
     font-size: 20px;
 }
-
+#organizationSelect{
+    font-size: 15px;
+}
 .error-message{
     color: red;
     font-size: 14px;
