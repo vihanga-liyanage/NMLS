@@ -73,6 +73,9 @@ public class IndexController {
     @Value("${client.client-secret}")
     private String clientSecret;
 
+    @Value("${provider.host}")
+    private String idpHost;
+
     /**
      * Redirects to this method once the user successfully authenticated and this method will redirect to index page.
      *
@@ -93,7 +96,7 @@ public class IndexController {
         OAuth2AuthorizedClient client =
                 authorizedClientService.loadAuthorizedClient(clientRegistrationId, oauthToken.getName());
         String accessToken = client.getAccessToken().getTokenValue();
-        Map<String, String> orgs = Util.getOrganizationsListForUser(userName, accessToken);
+        Map<String, String> orgs = Util.getOrganizationsListForUser(idpHost, accessToken);
         if (orgs == null || orgs.size() == 0) {
             model.addAttribute("message", "No organizations found for the user");
             return "error";
@@ -115,7 +118,7 @@ public class IndexController {
 
                 Set<String> scopesList = client.getAccessToken().getScopes();
                 String scopes = String.join(" ", scopesList);
-                JSONObject orgToken = Util.switchToken(accessToken, scopes, organization, clientId, clientSecret);
+                JSONObject orgToken = Util.switchToken(idpHost,accessToken, scopes, organization, clientId, clientSecret);
                 String idTokenString = orgToken.getString("id_token");
                 Claims claims = Util.decodeTokenClaims(idTokenString);
                 String orgaccessToken = orgToken.getString("access_token");

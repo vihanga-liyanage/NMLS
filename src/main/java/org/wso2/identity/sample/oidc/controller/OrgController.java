@@ -54,6 +54,8 @@ public class OrgController {
     @Value("${client.client-secret}")
     private String clientSecret;
 
+    @Value("${provider.host}")
+    private String idpHost;
     /**
      * Handles the redirection to /userinfo endpoint and get the user information from authentication object. This
      * method will display the id-token and user information in the UI.
@@ -76,7 +78,7 @@ public class OrgController {
                 // Extract ID token from access token (if applicable
                 Set<String> scopesList = client.getAccessToken().getScopes();
                 String scopes = String.join(" ", scopesList);
-                JSONObject orgToken = Util.switchToken(accessToken, scopes, selectedOrg, clientId, clientSecret);
+                JSONObject orgToken = Util.switchToken(idpHost,accessToken, scopes, selectedOrg, clientId, clientSecret);
 
                 session.setAttribute("currentOrg", selectedOrg);
                 session.setAttribute("orgToken", orgToken);

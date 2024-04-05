@@ -1,6 +1,8 @@
 package org.wso2.identity.sample.oidc.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
@@ -28,6 +30,11 @@ public class SettingsController {
     @Autowired
     private HttpSession session;
 
+    @Autowired
+    private Environment env;
+    @Value("${provider.host}")
+    private String idpHost;
+
     private final OAuth2AuthorizedClientService authorizedClientService;
 
     public SettingsController(OAuth2AuthorizedClientService authorizedClientService) {
@@ -49,7 +56,7 @@ public class SettingsController {
         }
         model.addAttribute("userName", userName);
         getTokenDetails(model, authentication);
-        Map<String,String> orgs= Util.getOrganizationsListForUser(userName,accessToken);
+        Map<String,String> orgs= Util.getOrganizationsListForUser(idpHost,accessToken);
         model.addAttribute("organizations",orgs);
         model.addAttribute("currentOrg",session.getAttribute("currentOrg"));
         if(userName.equals("steve@carbon.super")){//implement logic

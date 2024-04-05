@@ -48,9 +48,8 @@ public class Util {
         return stringBuilder.toString();
     }
 
-    public static Map<String, String> getOrganizationsListForUser(String userName, String accessToken) throws IOException {
-        String idpUrl = "https://localhost:9443";
-        String scimEp = idpUrl + "/api/users/v1/me/organizations";
+    public static Map<String, String> getOrganizationsListForUser(String idpHost, String accessToken) throws IOException {
+        String scimEp = idpHost + "/api/users/v1/me/organizations";
         HttpsURLConnection urlConnection = (HttpsURLConnection) new URL(scimEp).openConnection();
         urlConnection.setRequestMethod("GET");
         urlConnection.setRequestProperty("Authorization", getBearerHeader(accessToken));
@@ -75,9 +74,9 @@ public class Util {
         return "Bearer " + accessToken;
     }
 
-    public static JSONObject switchToken(String token,String scopes,String selectedOrg, String clientId, String clientSecret) throws IOException {
+    public static JSONObject switchToken(String idpHost,String token,String scopes,String selectedOrg, String clientId, String clientSecret) throws IOException {
 
-        HttpsURLConnection urlConnection1 = (HttpsURLConnection) new URL("https://localhost:9443/oauth2/token").openConnection();
+        HttpsURLConnection urlConnection1 = (HttpsURLConnection) new URL(idpHost+"/oauth2/token").openConnection();
         urlConnection1.setRequestMethod("POST");
 
         String encodedCredentials = new String(Base64.getEncoder().encode(String.join(":", clientId, clientSecret)
