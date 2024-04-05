@@ -36,9 +36,7 @@
         <div class="content">
             <h3>Below are the basic id token details retrieve from the server on a successful login.</h3>
             <div>
-                <!--                <ul class="details">-->
-                <!--                     <span style="font-weight:bold" th:text="${idtoken}"></span>-->
-                <!--                </ul>-->
+
                 <table class="details">
                     <tr th:each="instance : ${idtoken}">
                         <td style="text-align:left;width:100px" th:text="${instance.key}">keyvalue</td>

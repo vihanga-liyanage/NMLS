@@ -12,6 +12,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Base64;
@@ -48,9 +49,8 @@ public class Util {
         return stringBuilder.toString();
     }
 
-    public static Map<String, String> getOrganizationsListForUser(String userName, String accessToken) throws IOException {
-        String idpUrl = "https://localhost:9443";
-        String scimEp = idpUrl + "/api/users/v1/me/organizations";
+    public static Map<String, String> getOrganizationsListForUser(String idpHost, String accessToken) throws IOException {
+        String scimEp = idpHost + "/api/users/v1/me/organizations";
         HttpsURLConnection urlConnection = (HttpsURLConnection) new URL(scimEp).openConnection();
         urlConnection.setRequestMethod("GET");
         urlConnection.setRequestProperty("Authorization", getBearerHeader(accessToken));
@@ -75,9 +75,9 @@ public class Util {
         return "Bearer " + accessToken;
     }
 
-    public static JSONObject switchToken(String token,String scopes,String selectedOrg, String clientId, String clientSecret) throws IOException {
+    public static JSONObject switchToken(String idpHost,String token,String scopes,String selectedOrg, String clientId, String clientSecret) throws IOException {
 
-        HttpsURLConnection urlConnection1 = (HttpsURLConnection) new URL("https://localhost:9443/oauth2/token").openConnection();
+        HttpsURLConnection urlConnection1 = (HttpsURLConnection) new URL(idpHost+"/oauth2/token").openConnection();
         urlConnection1.setRequestMethod("POST");
 
         String encodedCredentials = new String(Base64.getEncoder().encode(String.join(":", clientId, clientSecret)
@@ -106,6 +106,34 @@ public class Util {
         }
     }
 
+    public static String getClientCredentialsToken(String idpHost,String clientID,String clientSecret) throws IOException {
+
+        HttpsURLConnection urlConnection1 = (HttpsURLConnection) new URL(idpHost+"/oauth2/token").openConnection();
+        urlConnection1.setRequestMethod("POST");
+
+        String encodedCredentials = new String(Base64.getEncoder().encode(String.join(":", clientID, clientSecret)
+                .getBytes()));
+
+        urlConnection1.setRequestProperty("Authorization", "Basic " + encodedCredentials);
+        urlConnection1.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+
+        urlConnection1.setDoOutput(true);
+        DataOutputStream dataOutputStream = new DataOutputStream(urlConnection1.getOutputStream());
+
+        String payload = "grant_type=client_credentials";
+        dataOutputStream.writeBytes(payload);
+
+        String jsonresp;
+        if (urlConnection1.getResponseCode() >= 400) {
+            jsonresp = readFromError(urlConnection1);
+            return null;
+        } else {
+            jsonresp = readFromResponse(urlConnection1);
+            JSONObject json = new JSONObject(jsonresp);
+            return json.getString("access_token");
+        }
+    }
+
     public static Claims decodeTokenClaims(String token) {
         String[] splitToken = token.split("\\.");
         String unsignedToken = splitToken[0] + "." + splitToken[1] + ".";
@@ -113,5 +141,27 @@ public class Util {
         Jwt<?, ?> jwt = parser.parse(unsignedToken);
         Claims claims = (Claims) jwt.getBody();
         return claims;
+    }
+
+    public static void sendNotification(String token, String email, String idToken, String notifyurl) throws IOException {
+        HttpsURLConnection urlConnection1 = (HttpsURLConnection) new URL(notifyurl).openConnection();
+        urlConnection1.setRequestMethod("POST");
+
+        urlConnection1.setRequestProperty("Authorization", "Bearer " + token);
+        urlConnection1.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+
+        urlConnection1.setDoOutput(true);
+        DataOutputStream dataOutputStream = new DataOutputStream(urlConnection1.getOutputStream());
+
+        String payload = "email="+email+"&id_token="+idToken;
+        dataOutputStream.writeBytes(payload);
+
+        String resp;
+        if (urlConnection1.getResponseCode() >= 400) {
+            resp = readFromError(urlConnection1);
+        } else {
+            resp = readFromResponse(urlConnection1);
+        }
+
     }
 }

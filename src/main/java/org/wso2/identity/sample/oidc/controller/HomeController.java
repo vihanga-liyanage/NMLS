@@ -3,6 +3,8 @@ package org.wso2.identity.sample.oidc.controller;
 import io.jsonwebtoken.Claims;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
@@ -31,6 +33,14 @@ public class HomeController {
     @Autowired
     private HttpSession session;
 
+    @Autowired
+    private Environment env;
+    @Value("${provider.host}")
+    private String idpHost;
+
+    @Value("${app-config.admin-permission}")
+    private String adminPermission;
+
     private final OAuth2AuthorizedClientService authorizedClientService;
 
     public HomeController(OAuth2AuthorizedClientService authorizedClientService) {
@@ -57,7 +67,7 @@ public class HomeController {
             userName = user.getName();
         }
         model.addAttribute("userName", userName);
-        Map<String,String> orgs= Util.getOrganizationsListForUser(userName,accessToken);
+        Map<String,String> orgs= Util.getOrganizationsListForUser(idpHost,accessToken);
         model.addAttribute("organizations",orgs);
         model.addAttribute("currentOrg",session.getAttribute("currentOrg"));
 
@@ -77,7 +87,7 @@ public class HomeController {
         model.addAttribute("refreshToken", refreshToken);
         session.setAttribute("orgToken", orgToken);
 
-        if(userName.equals("steve@carbon.super")){//implement logic
+        if(scope.contains(adminPermission)){
             model.addAttribute("isAdmin",true);
         }
         return "home";
