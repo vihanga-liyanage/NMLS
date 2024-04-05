@@ -92,11 +92,45 @@ public class SettingsController {
 
 
     @PostMapping("/notify")
-    public String notifyToEmail(Authentication authentication, Model model,@RequestParam String email) {
+    public String notifyToEmail(Authentication authentication, Model model,@RequestParam String email) throws IOException {
+
+        OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
+        String clientRegistrationId = oauthToken.getAuthorizedClientRegistrationId();
+        OAuth2AuthorizedClient client =
+                authorizedClientService.loadAuthorizedClient(clientRegistrationId, oauthToken.getName());
+        String accessToken = client.getAccessToken().getTokenValue();
+        user = (DefaultOidcUser) authentication.getPrincipal();
+        if (user != null) {
+            userName = user.getName();
+        }
+        model.addAttribute("userName", userName);
+        Map<String,String> orgs= Util.getOrganizationsListForUser(idpHost,accessToken);
+        model.addAttribute("organizations",orgs);
+        model.addAttribute("currentOrg",session.getAttribute("currentOrg"));
 
         JSONObject orgToken = (JSONObject) session.getAttribute("orgToken");
         String idTokenString = orgToken.getString("id_token");
+        Claims claims = Util.decodeTokenClaims(idTokenString);
+        String orgaccessToken = orgToken.getString("access_token");
+        Set<String> scope =  new HashSet<>(Arrays.asList(orgToken.getString("scope").split(" ")));
+        String tokenType = orgToken.getString("token_type");
+        String refreshToken = orgToken.getString("refresh_token");
+        String accessTokenExp = claims.getExpiration().toString();
+        model.addAttribute("accessToken", orgaccessToken);
+        model.addAttribute("tokenType", tokenType);
+        model.addAttribute("accessTokenExp", accessTokenExp);
+        model.addAttribute("scope", scope);
+        model.addAttribute("idtoken", claims);
+        model.addAttribute("refreshToken", refreshToken);
+        session.setAttribute("orgToken", orgToken);
 
+        if(scope.contains(adminPermission)){
+            model.addAttribute("isAdmin",true);
+        }
+
+        String token=Util.getClientCredentialsToken(idpHost,env.getProperty("app-config.notify.application-client-id"),env.getProperty("app-config.notify.application-client-secret"));
+
+        Util.sendNotification(token,email,idTokenString,env.getProperty("app-config.notify.notify-url"));
 
 
         model.addAttribute("emailSent", true);

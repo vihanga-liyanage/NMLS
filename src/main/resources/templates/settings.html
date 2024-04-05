@@ -62,16 +62,13 @@
     });
 
     </script>
-
+    <span th:if="${emailSent}">Notification sent successfully! </span>
     <div class="content-adminservices">
-        <span th:if="${emailSent}"> Email sent successfully! </span>
         <a href="/admin-services" class="underline">Go to Admin Services</a>
-
-        <form action="/notify" method="post">
+        <form th:action="@{/notify}" method="post">
             <input type="email" name="email" th:placeholder="'Enter your email address'" required>
             <button type="submit">Notify</button>
         </form>
-
     </div>
 </div>
 <img src="images/footer.png" class="footer-image"/>

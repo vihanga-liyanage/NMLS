@@ -31,6 +31,6 @@ spring:
 app-config:
   admin-permission: internal_login
   notify:
-    application-clientid: 06jKfWX5QNSybUiDKmiDZc5kYz0a
-    application-clientsecret: qx0ChLLfVZ9vkRO0izTZ_88OtDJBBC06Cdp2wGTzJo4a
+    application-client-id: 06jKfWX5QNSybUiDKmiDZc5kYz0a
+    application-client-secret: qx0ChLLfVZ9vkRO0izTZ_88OtDJBBC06Cdp2wGTzJo4a
     notify-url: https://webhook.site/6cc20331-032d-450c-a777-a5436c62453f
