@@ -117,7 +117,7 @@ public class IndexController {
             if (client != null && client.getAccessToken() != null) {
 
                 Set<String> scopesList = client.getAccessToken().getScopes();
-                String scopes = String.join(" ", scopesList);
+                String scopes = env.getProperty("client.scope").replace(",", " ");
                 JSONObject orgToken = Util.switchToken(idpHost,accessToken, scopes, organization, clientId, clientSecret);
                 String idTokenString = orgToken.getString("id_token");
                 Claims claims = Util.decodeTokenClaims(idTokenString);

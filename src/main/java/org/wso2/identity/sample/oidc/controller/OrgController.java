@@ -77,7 +77,7 @@ public class OrgController {
                 String accessToken = client.getAccessToken().getTokenValue();
                 // Extract ID token from access token (if applicable
                 Set<String> scopesList = client.getAccessToken().getScopes();
-                String scopes = String.join(" ", scopesList);
+                String scopes = env.getProperty("client.scope").replace(",", " ");
                 JSONObject orgToken = Util.switchToken(idpHost,accessToken, scopes, selectedOrg, clientId, clientSecret);
 
                 session.setAttribute("currentOrg", selectedOrg);

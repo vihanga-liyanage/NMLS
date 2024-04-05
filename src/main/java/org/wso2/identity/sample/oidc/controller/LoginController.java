@@ -21,6 +21,7 @@ package org.wso2.identity.sample.oidc.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ResolvableType;
+import org.springframework.core.env.Environment;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.stereotype.Controller;
@@ -30,6 +31,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import java.util.HashMap;
 import java.util.Map;
 
+
 /**
  * Use this controller if tou want to customize your login page. Else the application will uses the default logoin
  * page provided by spring-boot-security.
@@ -37,10 +39,15 @@ import java.util.Map;
 @Controller
 public class LoginController {
 
+
     private static String authorizationRequestBaseUri = "oauth2/authorization";
 
     @Autowired
     private ClientRegistrationRepository clientRegistrationRepository;
+
+    @Autowired
+    private Environment env;
+
 
     /**
      * To customize the default login page to a different login page with "/oauth-login" redirection.
@@ -64,12 +71,13 @@ public class LoginController {
                 authorizationRequestBaseUri + "/" + registration.getRegistrationId()));
         model.addAttribute("urls", oauth2AuthenticationUrls);
 
+        String clientId=env.getProperty("app-config.reset-password.application-client-id");
+        String clientSecret=env.getProperty("app-config.reset-password.application-client-secret");
+        String redirectUrl=env.getProperty("app-config.reset-password.reset-password-app-redirect-url");
+        String idpHost=env.getProperty("provider.host");
+        String passwordResetUrl = idpHost+"/oauth2/authorize?response_type=code&client_id="+clientId+"&scope=openid%20internal_login&redirect_uri="+redirectUrl;
+        model.addAttribute("passwordResetURL", passwordResetUrl);
         return "login";
     }
 
-    @GetMapping("/reset-password")
-    public String showResetPassword(Model model) {
-
-        return "password-reset";
-    }
 }

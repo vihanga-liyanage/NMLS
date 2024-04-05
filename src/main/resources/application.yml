@@ -34,3 +34,7 @@ app-config:
     application-client-id: 06jKfWX5QNSybUiDKmiDZc5kYz0a
     application-client-secret: qx0ChLLfVZ9vkRO0izTZ_88OtDJBBC06Cdp2wGTzJo4a
     notify-url: https://webhook.site/6cc20331-032d-450c-a777-a5436c62453f
+  reset-password:
+    application-client-id: ReiV0lqvLlvJqv2ggLODel3prNMa
+    application-client-secret: lKLZAujqwQYvIbXyBbRC3E9yG8cf8XZbJ25LK5J58tka
+    reset-password-app-redirect-url: http://localhost:8080/NMLSPasswordReset/reset-password
